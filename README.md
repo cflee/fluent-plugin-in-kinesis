@@ -1,6 +1,7 @@
 # Fluent::Plugin::InKinesis
 
-##Overview
+## Overview
+
   * This plugin retrieves records from Amazon Kinesis.
   
   * 1 thread is used for each shard; record retrieval occurs in parallel.
@@ -28,7 +29,8 @@ Or install it yourself as:
     $ gem install fluent-plugin-in-kinesis
 
 
-##Configuration
+## Configuration
+
 ### `type`
   Use the word 'kinesis'.
 
@@ -94,7 +96,8 @@ Or install it yourself as:
   Max retry count.
 
 
-##Configuration examples
+## Configuration examples
+
     <source>
     
       type kinesis
@@ -123,7 +126,8 @@ Or install it yourself as:
       
     </source>
     
-##Using describe_shard
+## Using describe_shard
+
 When describe_shard is specified, target shards are manually set using describe_use_shards parameter.
 
     <source>
