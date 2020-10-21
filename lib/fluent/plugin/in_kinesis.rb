@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-require 'aws-sdk-core'
+require 'aws-sdk-kinesis'
 require 'multi_json'
 require 'yajl'
 require 'logger'
@@ -19,12 +19,14 @@ require 'securerandom'
 require 'base64'
 require 'stringio'
 require 'zlib'
+require 'fluent/plugin/input'
 require 'fluent/plugin/thread_supervisor'
 require 'fluent/plugin/kinesis_shard'
 
 
-module FluentPluginKinesis
-  class InputFilter < Fluent::Input
+module Fluent
+  module Plugin
+    class KinesisInput < Fluent::Plugin::Input
     include Fluent::DetachMultiProcessMixin
     include KinesisSupervisor
     include KinesisShard
@@ -33,6 +35,8 @@ module FluentPluginKinesis
 
     Fluent::Plugin.register_input("kinesis", self)
     
+      helpers :compat_parameters
+
     config_param :tag,                    :string, :default => nil
     config_param :state_dir_path,         :string, :default => nil
 
@@ -55,11 +59,12 @@ module FluentPluginKinesis
     config_param :fallback_shard_iterator_type, :string,  :default => 'TRIM_HORIZON', :secret => true
     
     def configure(conf)
+        compat_parameters_convert(conf, :parser)
       super
       
       unless @state_dir_path
-        $log.warn "'state_dir_path PATH' parameter is not set to a 'kinesis' source."
-        $log.warn "this parameter is highly recommended to save the last rows to resume tailing."
+          log.warn "'state_dir_path PATH' parameter is not set to a 'kinesis' source."
+          log.warn "this parameter is highly recommended to save the last rows to resume tailing."
       end
       @parser = Fluent::Plugin.new_parser(conf['format'])
       @parser.configure(conf)
@@ -105,4 +110,5 @@ module FluentPluginKinesis
       @client = Aws::Kinesis::Client.new(options)
     end
   end
+end
 end

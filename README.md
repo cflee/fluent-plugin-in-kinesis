@@ -12,6 +12,14 @@
 
 * Conforms to default fluent format.
 
+IAM permissions required for the following actions on the Kinesis Data Stream:
+
+```
+kinesis:DescribeStream
+kinesis:GetShardIterator
+kinesis:GetRecords
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -28,6 +36,10 @@ Or install it yourself as:
 
     $ gem install fluent-plugin-in-kinesis
 
+## Requirements
+
+- Fluentd >= v1
+- Ruby >= 2.4
 
 ## Configuration
 

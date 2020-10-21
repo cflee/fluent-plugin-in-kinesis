@@ -6,7 +6,7 @@ module KinesisShard
     begin
       state_store = @state_dir_path.nil? ? MemoryStateStore.new : StateStore.new(@state_dir_path, shard_id)
     rescue => e
-      $log.warn "does not StateStore !!: #{e.message}"
+      log.warn "does not StateStore !!: #{e.message}"
       state_store = MemoryStateStore.new
     end
 
@@ -18,7 +18,7 @@ module KinesisShard
       begin
         records_info = get_records_with_retry(shard_iterator)
       rescue => e
-        $log.error "get record Error: #{e.message}"
+        log.error "get record Error: #{e.message}"
         re_shard_iterator_info = get_shard_iterator_info(shard_id, last_sequence_number)
         records_info = get_records_with_retry(re_shard_iterator_info.shard_iterator)
       end
@@ -51,7 +51,7 @@ module KinesisShard
         stream_name: @stream_name, shard_id: shard_id, shard_iterator_type: 'AFTER_SEQUENCE_NUMBER', starting_sequence_number: last_sequence_number)
     end
   rescue => e
-    $log.warn "does not AFTER_SEQUENCE_NUMBER : #{e.message}"
+    log.warn "does not AFTER_SEQUENCE_NUMBER : #{e.message}"
     shard_iterator_info = @client.get_shard_iterator(
       stream_name: @stream_name, shard_id: shard_id, shard_iterator_type: 'TRIM_HORIZON')
   end
@@ -62,10 +62,10 @@ module KinesisShard
   rescue Aws::Kinesis::Errors::ProvisionedThroughputExceededException => e
     if retry_count < @retries_on_get_records
       sleep(backoff.next)
-      $log.warn "Retrying to get records. Retry count: #{retry_count + 1}"
+      log.warn "Retrying to get records. Retry count: #{retry_count + 1}"
       get_records_with_retry(shard_iterator, retry_count + 1, backoff: backoff)
     else
-      $log.warn "Give up to get records."
+      log.warn "Give up to get records."
       raise e
     end
   end
@@ -83,7 +83,7 @@ module KinesisShard
 
       time, record = @parser.parse(d)
       if record.nil? || record.empty?
-        $log.warn "format error :=> record #{time} : #{d}"
+          log.warn "format error :=> record #{time} : #{d}"
       else
         me.add(time, record)
       end
@@ -120,7 +120,7 @@ module KinesisShard
         begin
           load_json_file
         rescue => e
-          $log.warn "load_json_file: #{e.message}"
+          log.warn "load_json_file: #{e.message}"
         end
       end
       

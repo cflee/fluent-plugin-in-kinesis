@@ -14,7 +14,7 @@ module KinesisSupervisor
     active_shard_ids.each do |shard_id|
       if @map.has_key?(shard_id)
         if @map[shard_id].status.nil?
-          $log.error "Thread dead => shard : #{shard_id}"
+          log.error "Thread dead => shard : #{shard_id}"
           thread_kill(shard_id)
         elsif @thread_stop_map[shard_id]
           thread_kill(shard_id)
@@ -38,7 +38,7 @@ module KinesisSupervisor
   end
   
   def thread_kill(shard_id)
-    $log.info "Thread killing => shard : #{shard_id}"
+    log.info "Thread killing => shard : #{shard_id}"
     @map[shard_id].join
     @dead_thread << shard_id
     @thread_stop_map.delete(shard_id)
@@ -60,7 +60,7 @@ module KinesisSupervisor
     
     active_shard_ids
   rescue => e
-    $log.error "get_shard_ids : #{e.message}"
+    log.error "get_shard_ids : #{e.message}"
   end
 end
 
