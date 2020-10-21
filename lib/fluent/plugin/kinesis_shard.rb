@@ -13,6 +13,8 @@ module KinesisShard
     last_sequence_number = state_store.load_sequence_number
     shard_iterator_info = get_shard_iterator_info(shard_id, last_sequence_number)
     shard_iterator = shard_iterator_info.shard_iterator
+
+    log.debug "shard #{shard_id} last sequence number #{last_sequence_number} shard iterator #{shard_iterator}"
     
     while !@stop_flag && !@thread_stop_map[shard_id] do
       begin
@@ -27,7 +29,7 @@ module KinesisShard
         @thread_stop_map[shard_id] = true
         break
       end
-      
+
       data = records_info.records.map(&:data)
       emit_records(data, shard_id)
       tmp_last_sequence_number = sequence(records_info)
@@ -57,6 +59,7 @@ module KinesisShard
   end
 
   def get_records_with_retry(shard_iterator, retry_count=0, backoff: nil)
+    log.debug "get_records_with_retry on shard iterator #{shard_iterator}"
     backoff ||= Backoff.new
     @client.get_records(shard_iterator: shard_iterator, limit: @load_records_limit)
   rescue Aws::Kinesis::Errors::ProvisionedThroughputExceededException => e
@@ -81,11 +84,12 @@ module KinesisShard
         d = Zlib::GzipReader.new(StringIO.new(d)).read
       end
 
-      time, record = @parser.parse(d)
-      if record.nil? || record.empty?
+      @parser.parse(d) do |time, record|
+        if record.nil? || record.empty?
           log.warn "format error :=> record #{time} : #{d}"
-      else
-        me.add(time, record)
+        else
+          me.add(time, record)
+        end
       end
     end
     

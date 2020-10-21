@@ -17,12 +17,14 @@ module KinesisSupervisor
           log.error "Thread dead => shard : #{shard_id}"
           thread_kill(shard_id)
         elsif @thread_stop_map[shard_id]
+          log.debug "Stopping thread for shard #{shard_id}"
           thread_kill(shard_id)
         else
           next
         end
       else
         @thread_stop_map[shard_id] = false
+        log.debug "Creating new thread for shard #{shard_id}"
         t = Thread.new(shard_id, &method(:load_records_thread))
         @map[shard_id] = t
       end
@@ -31,7 +33,8 @@ module KinesisSupervisor
     map_shard_ids = @map.keys
     map_shard_ids.each do |map_shard_id|
       unless active_shard_ids.include?(map_shard_id)
-        @thread_stop_map[shard_id] = true
+        log.debug "Need to stop thread for shard #{map_shard_id}"
+        @thread_stop_map[map_shard_id] = true
         thread_kill(map_shard_id)
       end
     end
@@ -57,6 +60,8 @@ module KinesisSupervisor
         active_shard_ids << shard.shard_id
       end
     end
+
+    log.debug "active shards #{active_shard_ids}"
     
     active_shard_ids
   rescue => e
